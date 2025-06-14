@@ -5,13 +5,14 @@ import {
   type State,
   type Content,
   type HandlerCallback,
-} from '@elizaos/core';
-import { GammaService } from '../../services/gammaService';
+} from "@elizaos/core";
+import { GammaService } from "../../services/gammaService";
 
 export const redeemSharesAction: Action = {
-  name: 'REDEEM_SHARES',
+  name: "REDEEM_SHARES",
   similes: ["REDEEM_SHARES"],
-  description: 'Redeems shares in a specified Polymarket market after it has resolved.',
+  description:
+    "Redeems shares in a specified Polymarket market after it has resolved.",
   examples: [
     [
       {
@@ -43,5 +44,5 @@ export const redeemSharesAction: Action = {
     } catch (error) {
       return `Error redeeming shares: ${error instanceof Error ? error.message : "Unknown error"}`;
     }
-  }
+  },
 };

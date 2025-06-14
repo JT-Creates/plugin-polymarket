@@ -20,7 +20,9 @@ export const connectWalletAction: Action = {
       },
       {
         name: "{{agent}}",
-        content: { text: "Connecting your wallet... (In a real app, you'd see a wallet connection prompt)" },
+        content: {
+          text: "Connecting your wallet... (In a real app, you'd see a wallet connection prompt)",
+        },
       },
     ],
   ],
@@ -28,10 +30,14 @@ export const connectWalletAction: Action = {
   validate: async (
     _runtime: IAgentRuntime,
     message: Memory,
-    _state?: State
+    _state?: State,
   ): Promise<boolean> => {
     const text = (message.content as Content).text.toLowerCase();
-    return text.includes("connect") && text.includes("wallet") && text.includes("polymarket");
+    return (
+      text.includes("connect") &&
+      text.includes("wallet") &&
+      text.includes("polymarket")
+    );
   },
 
   handler: async (
@@ -40,12 +46,13 @@ export const connectWalletAction: Action = {
     _state: State,
     _options: any,
     callback: HandlerCallback,
-    _responses: Memory[]
+    _responses: Memory[],
   ): Promise<string> => {
     try {
       // In a real implementation, this would trigger a wallet connection flow
       // (e.g., using a library like MetaMask's provider) and interact with the Polymarket API.
-      const responseText = "Connecting your wallet... (In a real app, you'd see a wallet connection prompt and handle the connection)";
+      const responseText =
+        "Connecting your wallet... (In a real app, you'd see a wallet connection prompt and handle the connection)";
       await callback({ text: responseText });
       return responseText;
     } catch (error) {

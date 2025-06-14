@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeAll, afterAll } from 'vitest';
-import plugin from '../src/plugin';
+import plugin, { init } from '../src/plugin';
 import { ModelType, logger } from '@elizaos/core';
 import type { IAgentRuntime } from '@elizaos/core';
 import dotenv from 'dotenv';

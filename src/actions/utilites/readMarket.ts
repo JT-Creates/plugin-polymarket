@@ -6,10 +6,10 @@ import {
   type Content,
   elizaLogger,
   HandlerCallback,
-  logger
+  logger,
 } from "@elizaos/core";
-import { GammaService } from "../../../services/gammaService";
-import { GetMarketActionContent, PolymarketMarket } from "../../../types";
+import { GammaService } from "../../services/gammaService";
+import { GetMarketActionContent, PolymarketMarket } from "../../types";
 
 export const readMarketAction: Action = {
   name: "GET_POLYMARKET_MARKET_BY_ID",
@@ -18,26 +18,31 @@ export const readMarketAction: Action = {
     "SINGLE_MARKET_VIEWER",
     "MARKET_DETAIL_FETCHER",
   ],
-  description: "Fetches and displays details for a specific Polymarket market by its ID",
+  description:
+    "Fetches and displays details for a specific Polymarket market by its ID",
   examples: [
     [
       {
         name: "{{user1}}",
-        content: { text: 'Show me details for Polymarket market 138462...' },
+        content: { text: "Show me details for Polymarket market 138462..." },
       },
       {
         name: "{{agent}}",
-        content: { text: 'Market "Will event X happen by date Y?" (ID: 138462)\nDescription: Detailed description of the market.\nStatus: Active\nVolume: 100000\nLiquidity: 50000\nEnds: 2024-12-31\nOutcomes:\n- Yes: $0.65\n- No: $0.35\nURL: https://polymarket.com/market/event-x-happen-by-date-y' },
+        content: {
+          text: 'Market "Will event X happen by date Y?" (ID: 138462)\nDescription: Detailed description of the market.\nStatus: Active\nVolume: 100000\nLiquidity: 50000\nEnds: 2024-12-31\nOutcomes:\n- Yes: $0.65\n- No: $0.35\nURL: https://polymarket.com/market/event-x-happen-by-date-y',
+        },
       },
     ],
     [
       {
         name: "{{user1}}",
-        content: { text: 'Get Polymarket data for market 138462...' },
+        content: { text: "Get Polymarket data for market 138462..." },
       },
       {
         name: "{{agent}}",
-        content: { text: 'Market "Another interesting question?" (ID: 138462)\nDescription: Some info about this market.\nStatus: Closed\nVolume: 75000\nLiquidity: 20000\nEnds: 2023-01-15\nOutcomes:\n- Option A: $0.80\n- Option B: $0.20\nURL: https://polymarket.com/market/another-interesting-question' },
+        content: {
+          text: 'Market "Another interesting question?" (ID: 138462)\nDescription: Some info about this market.\nStatus: Closed\nVolume: 75000\nLiquidity: 20000\nEnds: 2023-01-15\nOutcomes:\n- Option A: $0.80\n- Option B: $0.20\nURL: https://polymarket.com/market/another-interesting-question',
+        },
       },
     ],
   ],
@@ -52,7 +57,10 @@ export const readMarketAction: Action = {
       const text = content.text.toLowerCase();
 
       const hasPolymarketKeyword = text.includes("polymarket");
-      const hasMarketIdKeyword = text.includes("market id") || text.includes("id") || /0x[a-f0-9]{5,}/.test(text); // Basic check for hex-like ID
+      const hasMarketIdKeyword =
+        text.includes("market id") ||
+        text.includes("id") ||
+        /0x[a-f0-9]{5,}/.test(text); // Basic check for hex-like ID
 
       const hasActionKeywords =
         text.includes("show") ||
@@ -73,7 +81,7 @@ export const readMarketAction: Action = {
     _state: State,
     _options: any,
     callback: HandlerCallback,
-    _responses: Memory[]
+    _responses: Memory[],
   ): Promise<string> => {
     try {
       const content = message.content as GetMarketActionContent;
@@ -99,7 +107,7 @@ export const readMarketAction: Action = {
 
       const responseContent: Content = {
         text: formatMarketResponse(result.market),
-      }
+      };
 
       await callback(responseContent);
 
@@ -115,7 +123,7 @@ function formatMarketResponse(market: PolymarketMarket): string {
   if (market.description) {
     response += `Description: ${market.description}\n`;
   }
-  response += `Status: ${market.active ? 'Active' : 'Inactive'}${market.closed ? ', Closed' : ''}\n`;
+  response += `Status: ${market.active ? "Active" : "Inactive"}${market.closed ? ", Closed" : ""}\n`;
   response += `Volume: ${market.volume.toLocaleString()}\n`;
   response += `Liquidity: ${market.liquidity.toLocaleString()}\n`;
   if (market.endDate) {
@@ -125,7 +133,7 @@ function formatMarketResponse(market: PolymarketMarket): string {
   if (market.outcomes && market.outcomes.length > 0) {
     response += "Outcomes:\n";
     response += market.outcomes
-      .map(outcome => `- ${outcome.name}: $${outcome.price}`)
+      .map((outcome) => `- ${outcome.name}: $${outcome.price}`)
       .join("\n");
   } else {
     response += "No outcome data available";

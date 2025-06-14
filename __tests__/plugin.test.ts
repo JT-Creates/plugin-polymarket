@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
-import plugin from '../src/plugin';
+import plugin, { init } from '../src/plugin';
 import { ModelType, logger } from '@elizaos/core';
 import { StarterService } from '../src/plugin';
 import dotenv from 'dotenv';

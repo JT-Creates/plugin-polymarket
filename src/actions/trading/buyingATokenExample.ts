@@ -1,4 +1,5 @@
 import { Side, OrderType } from "@polymarket/clob-client";
+import { clobClient } from "../../services/clobService";
 // GTC Order example
 //
 
@@ -37,7 +38,7 @@ async function GTD_Order_Example() {
   const oneMinute = 60 * 1000;
   const seconds = 30 * 1000;
   const expiration = parseInt(
-    ((new Date().getTime() + oneMinute + seconds) / 1000).toString()
+    ((new Date().getTime() + oneMinute + seconds) / 1000).toString(),
   );
 
   const order = await clobClient.createOrder({
@@ -79,11 +80,11 @@ async function Order_Example() {
     nonce: 0,
     price: 0.5,
   });
-  console.log("Created Order", order);
+  console.log("Created Order", marketOrder);
 
   // Send it to the server
-  // FOK Order
-  const resp = await clobClient.postOrder(order, OrderType.FOK);
+  // FOK BUY Order
+  const resp = await clobClient.postOrder(marketOrder, OrderType.FOK);
   console.log(resp);
 }
 
@@ -104,11 +105,11 @@ async function FOX_Sell_Example() {
     nonce: 0,
     price: 0.5,
   });
-  console.log("Created Order", order);
+  console.log("Created Order", marketOrder);
 
   // Send it to the server
-  // FOK Order
-  const resp = await clobClient.postOrder(order, OrderType.FOK);
+  // FOK SELL Order
+  const resp = await clobClient.postOrder(marketOrder, OrderType.FOK);
   console.log(resp);
 }
 

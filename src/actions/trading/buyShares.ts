@@ -5,13 +5,13 @@ import {
   type State,
   type Content,
   type HandlerCallback,
-} from '@elizaos/core';
-import { GammaService } from '../../services/gammaService';
+} from "@elizaos/core";
+import { GammaService } from "../../services/gammaService";
 
 export const buySharesAction: Action = {
-  name: 'BUY_SHARES',
+  name: "BUY_SHARES",
   similes: ["BUY_SHARES"],
-  description: 'Buys x number of shares in a specified Polymarket market.',
+  description: "Buys x number of shares in a specified Polymarket market.",
   examples: [
     [
       {
@@ -25,7 +25,12 @@ export const buySharesAction: Action = {
     ],
   ],
   validate: async (params: any) => {
-    return params.marketId && params.outcome && typeof params.quantity === 'number' && params.quantity > 0;
+    return (
+      params.marketId &&
+      params.outcome &&
+      typeof params.quantity === "number" &&
+      params.quantity > 0
+    );
   },
   handler: async (
     _runtime: IAgentRuntime,
@@ -44,6 +49,5 @@ export const buySharesAction: Action = {
     } catch (error) {
       return `Error buying shares: ${error instanceof Error ? error.message : "Unknown error"}`;
     }
-  }
-}
-
+  },
+};
