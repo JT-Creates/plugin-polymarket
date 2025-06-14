@@ -78,7 +78,7 @@ export class StarterTestSuite implements TestSuite {
           roomId: uuidv4() as UUID,
           content: {
             text: "Is the plugin ready?",
-            source: "test",
+            source: "agent_response",
             actions: [], // No specific action requested in the test message
           },
         };
@@ -90,7 +90,7 @@ export class StarterTestSuite implements TestSuite {
         };
         let responseReceived = false;
 
-        // Test the hello world action
+        // Test the polymarket plugin started notification action
         try {
           await runtime.processActions(
             message,
