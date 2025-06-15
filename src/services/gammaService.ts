@@ -29,7 +29,7 @@ export class GammaService extends Service {
   }
 
   static async start(runtime: IAgentRuntime): Promise<GammaService> {
-      const service = new GammaService(runtime);
+    const service = new GammaService(runtime);
     return service;
   }
 
