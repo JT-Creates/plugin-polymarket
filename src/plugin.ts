@@ -39,7 +39,7 @@ const polymarketPluginStartedAction: Action = {
       // This action is typically triggered internally upon plugin initialization.
       // A direct user invocation might not be standard.
       {
-        name: "polydawg",
+        name: "agent",
         content: { text: "Polymarket plugin is now active and ready." },
       },
     ],
@@ -168,7 +168,7 @@ const pluginPolymarket: Plugin = {
       }),
     },
   ],
-
+};
 // Import the models at the top of the file
 
 // Update action handlers to use models
@@ -253,7 +253,7 @@ readMarketsAction.handler = async (
       query,
     );
     const responseContent: Content = {
-      text: response
+      text: response,
     };
 
     await callback(responseContent);
@@ -265,7 +265,6 @@ readMarketsAction.handler = async (
     }`;
   }
 }; // Closing brace for the handler
-
 
 // Helper function to format markets response
 readMarketsAction.formatMarketsResponse = (markets, query) => {
