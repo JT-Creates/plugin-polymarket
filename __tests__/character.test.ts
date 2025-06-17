@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { character } from '../src/index';
+import { character } from '../src/character';
 
 describe('Character Configuration', () => {
   it('should have all required fields', () => {
@@ -20,7 +20,7 @@ describe('Character Configuration', () => {
 
   it('should have conditionally included plugins based on environment variables', () => {
     // This test is a simple placeholder since we can't easily test dynamic imports in vitest
-    // The actual functionality is tested at runtime by the starter test suite
+    // The actual functionality is tested at runtime by the clob test suite
 
     // Save the original env values
     const originalOpenAIKey = process.env.OPENAI_API_KEY;

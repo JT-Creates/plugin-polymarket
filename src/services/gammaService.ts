@@ -7,11 +7,11 @@ import {
   PolymarketSingleMarketApiResponse,
   PolymarketApiDataSchema,
 } from "../types";
-import { Service, IAgentRuntime, logger, Memory } from "@elizaos/core";
+import { Service, IAgentRuntime, logger, Memory } from "@elizaos/core/v2";
 
 export class GammaService extends Service {
   static serviceType = "GammaService";
-  static apiUrl = "https://gamma-api.polymarket.com/markets";
+  static apiUrl = "https://gamma-api.polymarket.com/";
   static DEFAULT_LIQUIDITY_MIN = "5000";
   static DEFAULT_VOLUME_MIN = "5000";
 
@@ -41,8 +41,6 @@ export class GammaService extends Service {
     service.stop();
   }
 
-  async stop() {}
-
   static async fetchMarkets(): Promise<PolymarketApiResponse> {
     const params: Omit<PolymarketApiCallParams, "limit" | "offset"> = {
       active: true,
@@ -54,7 +52,7 @@ export class GammaService extends Service {
     };
 
     const { markets, error } =
-      await GammaService._fetchAllMarketsPaginated(params);
+      await GammaService.fetchAllMarketsPaginated(params);
 
     if (error) return { success: false, error, markets: [] };
 
@@ -225,7 +223,7 @@ export class GammaService extends Service {
    * @param apiParams - Parameters for the API call
    * @returns Promise resolving to market data
    */
-  private static async _fetchMarketPage(
+  private static async fetchMarketPage(
     apiParams: PolymarketApiCallParams,
   ): Promise<PolymarketApiResponse> {
     try {
@@ -252,13 +250,13 @@ export class GammaService extends Service {
         markets: [],
       };
     } catch (error) {
-      console.log("Error in _fetchMarketPage:", error);
+      console.log("Error in fetchMarketPage:", error);
       return {
         success: false,
         error:
           error instanceof Error
             ? error.message
-            : "Unknown error occurred in _fetchMarketPage",
+            : "Unknown error occurred in fetchMarketPage",
         markets: [],
       };
     }
@@ -269,7 +267,7 @@ export class GammaService extends Service {
    * @param baseParams - Base parameters for the API call
    * @returns Promise resolving to full set of market data
    */
-  private static async _fetchAllMarketsPaginated(
+  private static async fetchAllMarketsPaginated(
     baseParams: Omit<PolymarketApiCallParams, "limit" | "offset">,
   ): Promise<PolymarketApiResponse> {
     const allMarkets: PolymarketMarket[] = [];
@@ -285,7 +283,7 @@ export class GammaService extends Service {
         offset,
       };
 
-      const pageResponse = await this._fetchMarketPage(pageParams);
+      const pageResponse = await this.fetchMarketPage(pageParams);
 
       if (!pageResponse.success || !pageResponse.markets) {
         // If a page fails, return what we have so far with the error
@@ -329,4 +327,6 @@ export class GammaService extends Service {
   async redeemShares(marketId: string): Promise<any> {
     throw new Error("Method not implemented.");
   }
+
+  async stop() {}
 }

@@ -3,28 +3,17 @@ import {
   type Action,
   type Memory,
   type State,
-  type Content,
   type HandlerCallback,
-} from "@elizaos/core";
+} from "@elizaos/core/v2";
 import { ClobService } from "../../services/clobService"; // Ensure correct path
+import { redeemSharesExamples } from "src/examples";
 
 export const redeemSharesAction: Action = {
   name: "REDEEM_SHARES",
   similes: ["REDEEM_SHARES"],
   description:
     "Redeems shares in a specified Polymarket market after it has resolved.",
-  examples: [
-    [
-      {
-        name: "{{user1}}",
-        content: { text: "Redeem shares in market 123" },
-      },
-      {
-        name: "{{agent}}",
-        content: { text: "Attempting to redeem shares in market 123." },
-      },
-    ],
-  ],
+  examples: [...redeemSharesExamples],
   validate: async (params: any) => {
     return params && params.marketId;
   },

@@ -1,13 +1,13 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import plugin from '../src/plugin';
-import { StarterService } from '../src/plugin';
-import { logger } from '@elizaos/core';
-import type { IAgentRuntime, Memory, State } from '@elizaos/core';
+import { logger } from '@elizaos/core/v2';
+import type { IAgentRuntime, Memory, State, Content } from '@elizaos/core/v2';
 import { v4 as uuidv4 } from 'uuid';
+import { ClobService } from '../src/services/clobService';
 
 // Mock logger
-vi.mock('@elizaos/core', async () => {
-  const actual = await vi.importActual('@elizaos/core');
+vi.mock('@elizaos/core/v2', async () => {
+  const actual = await vi.importActual('@elizaos/core/v2');
   return {
     ...actual,
     logger: {
@@ -30,7 +30,7 @@ describe('Error Handling', () => {
   describe('Action Error Handling', () => {
     it('should log errors in action handlers', async () => {
       // Find the action
-      const action = plugin.actions?.find((a) => a.name === 'HELLO_WORLD');
+      const action = plugin.actions?.find((a) => a.name === 'READ_POLYMARKET_MARKETS');
 
       if (action && action.handler) {
         // Force the handler to throw an error
@@ -46,7 +46,7 @@ describe('Error Handling', () => {
           entityId: uuidv4(),
           roomId: uuidv4(),
           content: {
-            text: 'Hello!',
+            text: 'Hello World!',
             source: 'test',
           },
         } as Memory;
@@ -67,8 +67,11 @@ describe('Error Handling', () => {
           await action.handler(mockRuntime, mockMessage, mockState, {}, mockCallback, []);
 
           // If we get here, no error was thrown, which is okay
-          // In a real application, error handling might be internal
+          expect(logger.error).not.toHaveBeenCalled();
+
+          // We expect the callback to be called (if there's internal error handling)
           expect(mockCallback).toHaveBeenCalled();
+          expect(mockCallback).toHaveBeenCalledWith(expect.objectContaining({ text: expect.any(String) }));
         } catch (error) {
           // If error is thrown, ensure it's handled correctly
           expect(logger.error).toHaveBeenCalled();
@@ -79,47 +82,61 @@ describe('Error Handling', () => {
 
   describe('Service Error Handling', () => {
     it('should throw an error when stopping non-existent service', async () => {
-      const mockRuntime = {
-        getService: vi.fn().mockReturnValue(null),
-      } as unknown as IAgentRuntime;
+      const mockRuntime = createMockRuntimeWithGetService(null);
 
       let caughtError = null;
       try {
-        await StarterService.stop(mockRuntime);
+        await ClobService.stop(mockRuntime);
+        expect(true).toBe(false); // Should not reach here
       } catch (error: any) {
         caughtError = error;
-        expect(error.message).toBe('Starter service not found in runtime for stop');
+        expect(error.message).toBe('ClobService not found in runtime for stop');
       }
 
       expect(caughtError).not.toBeNull();
-      expect(mockRuntime.getService).toHaveBeenCalledWith('starter');
+      expect(mockRuntime.getService).toHaveBeenCalledWith('clobservice');
     });
 
-    it('should handle service stop errors gracefully', async () => {
+    it('should handle error during service stop', async () => {
       const mockServiceWithError = {
         stop: vi.fn().mockImplementation(() => {
-          throw new Error('Error stopping service');
+          throw new Error('Simulated error during service stop');
         }),
       };
+      const mockRuntime = createMockRuntimeWithGetService(mockServiceWithError);
 
-      const mockRuntime = {
-        getService: vi.fn().mockReturnValue(mockServiceWithError),
-      } as unknown as IAgentRuntime;
-
-      // The error should be propagated
-      let caughtError = null;
+      let caughtError: Error | null = null;
       try {
-        await StarterService.stop(mockRuntime);
+        await ClobService.stop(mockRuntime);
+        expect(true).toBe(false); // Should not reach here
       } catch (error: any) {
         caughtError = error;
-        expect(error.message).toBe('Error stopping service');
+        expect(error.message).toBe('Simulated error during service stop');
       }
 
       expect(caughtError).not.toBeNull();
-      expect(mockRuntime.getService).toHaveBeenCalledWith('starter');
+      expect(mockRuntime.getService).toHaveBeenCalledWith('clobservice');
       expect(mockServiceWithError.stop).toHaveBeenCalled();
     });
   });
+
+  // Helper function to create a mock runtime with getService
+  const createMockRuntimeWithGetService = (service: any): IAgentRuntime => {
+    const mockRuntime: Partial<IAgentRuntime> = {
+      getService: vi.fn().mockReturnValue(service),
+      // Add any other necessary mocks here
+      character: {
+        name: 'Test Character',
+        system: 'You are a helpful assistant for testing.',
+        bio: ''
+      },
+      actions: [],
+      db: {},
+    };
+
+    return mockRuntime as IAgentRuntime;
+    
+  };
 
   describe('Plugin Events Error Handling', () => {
     it('should handle errors in event handlers gracefully', async () => {
@@ -154,7 +171,7 @@ describe('Error Handling', () => {
 
   describe('Provider Error Handling', () => {
     it('should handle errors in provider.get method', async () => {
-      const provider = plugin.providers?.find((p) => p.name === 'HELLO_WORLD_PROVIDER');
+      const provider = plugin.providers?.find((p) => p.name === 'POLY_MARKET_PROVIDER');
 
       if (provider) {
         // Create invalid inputs to test error handling

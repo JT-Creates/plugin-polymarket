@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeAll, afterAll } from 'vitest';
 import plugin from '../src/plugin';
-import type { IAgentRuntime, Memory, State, Provider } from '@elizaos/core';
-import { logger } from '@elizaos/core';
+import type { IAgentRuntime, Memory, State, Provider } from '@elizaos/core/v2';
+import { logger } from '@elizaos/core/v2';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 
@@ -126,7 +126,7 @@ function createRealMemory(): Memory {
 }
 
 describe('Provider Tests', () => {
-  // Find the HELLO_WORLD_PROVIDER from the providers array
+  // Find the POLY_MARKET_PROVIDER from the providers array
   beforeAll(() => {});
 
   describe('Provider Registration', () => {

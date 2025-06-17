@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
-import { composeActionExamples, formatActionNames, formatActions } from '@elizaos/core';
-import type { Action, Content, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { logger } from '@elizaos/core';
+import { composeActionExamples, formatActionNames, formatActions } from '@elizaos/core/v2';
+import type { Action, Content, IAgentRuntime, Memory, State } from '@elizaos/core/v2';
+import { logger } from '@elizaos/core/v2';
 import { v4 as uuidv4 } from 'uuid';
 
 /**

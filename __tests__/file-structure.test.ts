@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import { logger } from '@elizaos/core';
+import { logger } from '@elizaos/core/v2';
 
 // Helper function to check if a file exists
 function fileExists(filePath: string): boolean {
@@ -69,7 +69,7 @@ describe('Project Structure Validation', () => {
       expect(packageJson.scripts).toHaveProperty('test:coverage');
 
       // Check dependencies
-      expect(packageJson.dependencies).toHaveProperty('@elizaos/core');
+      expect(packageJson.dependencies).toHaveProperty('@elizaos/core/v2');
 
       // Check dev dependencies - adjusted for actual dev dependencies
       expect(packageJson.devDependencies).toBeTruthy();
@@ -127,9 +127,9 @@ describe('Project Structure Validation', () => {
 
     it('should have appropriate documentation content', () => {
       const readmeContent = fs.readFileSync(path.join(rootDir, 'README.md'), 'utf8');
-      expect(readmeContent).toContain('Plugin Starter'); // Assuming 'Plugin Starter' is correct for README.md
-      expect(readmeContent).toContain('Features');
-      expect(readmeContent).toContain('Getting Started');
+      expect(readmeContent).toContain('# Polymarket Plugin'); // Assuming 'Plugin Clob' is correct for README.md
+      expect(readmeContent).toContain('# Features');
+      expect(readmeContent).toContain('# Getting Started');
 
       const testReadmeContent = fs.readFileSync(path.join(rootDir, 'README-TESTS.md'), 'utf8');
       expect(testReadmeContent).toContain('Test Structure');
