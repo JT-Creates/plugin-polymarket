@@ -330,3 +330,4 @@ export class GammaService extends Service {
 
   async stop() {}
 }
+export default GammaService;

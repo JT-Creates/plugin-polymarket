@@ -4,6 +4,14 @@ import { logger } from '@elizaos/core/v2';
 import type { IAgentRuntime, Memory, State, Content } from '@elizaos/core/v2';
 import { v4 as uuidv4 } from 'uuid';
 import { ClobService } from '../src/services/clobService';
+import { buySharesAction } from '../src/actions/trading/buyShares';
+import { redeemSharesAction } from '../src/actions/trading/redeemShares';
+import { sellSharesAction } from '../src/actions/trading/sellShares';
+import { readMarketAction } from '../src/actions/utilites/readMarket';
+import { readMarketsAction } from '../src/actions/utilites/readMarkets';
+import { getUsernameAction, setUserAction } from '../src/actions/utilites/user';
+import { connectWalletAction } from '../src/actions/wallet/connectWallet';
+import { getWalletInfoAction } from '../src/actions/wallet/getWalletInfo';
 
 // Mock logger
 vi.mock('@elizaos/core/v2', async () => {
@@ -46,7 +54,7 @@ describe('Error Handling', () => {
           entityId: uuidv4(),
           roomId: uuidv4(),
           content: {
-            text: 'Hello World!',
+            text: 'Show me list of PolyMarket markets!',
             source: 'test',
           },
         } as Memory;
@@ -87,14 +95,14 @@ describe('Error Handling', () => {
       let caughtError = null;
       try {
         await ClobService.stop(mockRuntime);
-        expect(true).toBe(false); // Should not reach here
+ expect(true).toBe(false); // Should not reach here
       } catch (error: any) {
-        caughtError = error;
+        caughtError = error as Error;
         expect(error.message).toBe('ClobService not found in runtime for stop');
       }
 
-      expect(caughtError).not.toBeNull();
-      expect(mockRuntime.getService).toHaveBeenCalledWith('clobservice');
+      expect(caughtError).toBeInstanceOf(Error);
+      expect(mockRuntime.getService).toHaveBeenCalledWith('ClobService');
     });
 
     it('should handle error during service stop', async () => {
@@ -110,12 +118,12 @@ describe('Error Handling', () => {
         await ClobService.stop(mockRuntime);
         expect(true).toBe(false); // Should not reach here
       } catch (error: any) {
-        caughtError = error;
+        caughtError = error as Error;
         expect(error.message).toBe('Simulated error during service stop');
       }
 
-      expect(caughtError).not.toBeNull();
-      expect(mockRuntime.getService).toHaveBeenCalledWith('clobservice');
+      expect(caughtError).toBeInstanceOf(Error);
+      expect(mockRuntime.getService).toHaveBeenCalledWith('ClobService');
       expect(mockServiceWithError.stop).toHaveBeenCalled();
     });
   });
@@ -130,8 +138,17 @@ describe('Error Handling', () => {
         system: 'You are a helpful assistant for testing.',
         bio: ''
       },
-      actions: [],
-      db: {},
+      actions: [
+          connectWalletAction,
+          getUsernameAction,
+          setUserAction,
+          getWalletInfoAction,
+          readMarketsAction,
+          readMarketAction,
+          buySharesAction,
+          sellSharesAction,
+          redeemSharesAction],
+      db: {} as any,
     };
 
     return mockRuntime as IAgentRuntime;
@@ -173,7 +190,7 @@ describe('Error Handling', () => {
     it('should handle errors in provider.get method', async () => {
       const provider = plugin.providers?.find((p) => p.name === 'POLY_MARKET_PROVIDER');
 
-      if (provider) {
+      if (provider && provider.get) {
         // Create invalid inputs to test error handling
         const mockRuntime = null as unknown as IAgentRuntime;
         const mockMessage = null as unknown as Memory;
@@ -186,7 +203,7 @@ describe('Error Handling', () => {
           expect(true).toBe(true);
         } catch (error) {
           // If it does throw, at least make sure it's a handled error
-          expect(logger.error).toHaveBeenCalled();
+ expect(logger.error).toHaveBeenCalled();
         }
       }
     });

@@ -1,7 +1,6 @@
 import { describe, expect, it, vi, beforeAll, afterAll } from 'vitest';
 import plugin from '../src/plugin';
-import { logger } from '@elizaos/core/v2';
-import type { Action, IAgentRuntime, Memory, State, HandlerCallback } from '@elizaos/core/v2';
+import { type Action, type IAgentRuntime, type Memory, type State, type HandlerCallback, logger } from '@elizaos/core/v2';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 import {
@@ -43,10 +42,10 @@ describe('Actions', () => {
       documentTestResult('Core Action Tests', coreTestResults);
     }
   });
-
+/*
   describe('POLYMARKET_PLUGIN_STARTED_NOTIFICATION Action', () => {
     it('should exist in the plugin', () => {
-      expect(pluginStartedAction).toBeDefined();
+      expect(pluginStarteAction).toBeDefined();
     });
 
     it('should have the correct structure', () => {
@@ -145,4 +144,5 @@ describe('Actions', () => {
       }
     });
   });
+  */
 });

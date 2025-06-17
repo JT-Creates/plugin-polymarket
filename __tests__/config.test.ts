@@ -40,7 +40,7 @@ describe('Plugin Configuration Schema', () => {
     if (initPlugin) {
       let error = null;
       try {
-        await initPlugin(validConfig, {} as any); // Pass a mock runtime
+        await initPlugin(validConfig, {} as any);
       } catch (e) {
         error = e;
       }
@@ -54,7 +54,7 @@ describe('Plugin Configuration Schema', () => {
     if (initPlugin) {
       let error = null;
       try {
-        await initPlugin(emptyConfig, {} as any); // Pass a mock runtime
+        await initPlugin(emptyConfig, {} as any);
       } catch (e) {
         error = e;
       }

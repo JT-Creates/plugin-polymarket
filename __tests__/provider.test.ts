@@ -4,6 +4,14 @@ import type { IAgentRuntime, Memory, State, Provider } from '@elizaos/core/v2';
 import { logger } from '@elizaos/core/v2';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
+import { buySharesAction } from '../src/actions/trading/buyShares';
+import { redeemSharesAction } from '../src/actions/trading/redeemShares';
+import { sellSharesAction } from '../src/actions/trading/sellShares';
+import { readMarketAction } from '../src/actions/utilites/readMarket';
+import { readMarketsAction } from '../src/actions/utilites/readMarkets';
+import { getUsernameAction, setUserAction } from '../src/actions/utilites/user';
+import { connectWalletAction } from '../src/actions/wallet/connectWallet';
+import { getWalletInfoAction } from '../src/actions/wallet/getWalletInfo';
 
 // Setup environment variables
 dotenv.config();
@@ -116,7 +124,16 @@ function createRealMemory(): Memory {
     content: {
       text: 'What can you provide?',
       source: 'test',
-      actions: [],
+      actions: [
+          connectWalletAction,
+          getUsernameAction,
+          setUserAction,
+          getWalletInfoAction,
+          readMarketsAction,
+          readMarketAction,
+          buySharesAction,
+          sellSharesAction,
+          redeemSharesAction],
     },
     metadata: {
       sessionId: uuidv4(),
@@ -141,38 +158,38 @@ describe('Provider Tests', () => {
    });*/
 
    /*it('should correctly initialize providers array', () => {
-   // Providers should be an array with at least one provider
-   if (plugin.providers) {
-   expect(plugin.providers.length).toBeGreaterThan(0);
+    // Providers should be an array with at least one provider
+    if (plugin.providers) {
+      expect(plugin.providers.length).toBeGreaterThan(0);
 
-   let allValid = true;
-   const invalidProviders: string[] = [];
+      let allValid = true;
+      const invalidProviders: string[] = [];
 
-   // Each provider should have the required structure
-   plugin.providers.forEach((provider: Provider) => {
-   const isValid =
-   provider.name !== undefined &&
-   provider.description !== undefined &&
-   typeof provider.get === 'function';
+      // Each provider should have the required structure
+      plugin.providers.forEach((provider: Provider) => {
+        const isValid =
+          provider.name !== undefined &&
+          provider.description !== undefined &&
+          typeof provider.get === 'function';
 
-   if (!isValid) {
-   allValid = false;
-   invalidProviders.push(provider.name || 'unnamed');
-   }
+        if (!isValid) {
+          allValid = false;
+          invalidProviders.push(provider.name || 'unnamed');
+        }
 
-   expect(provider).toHaveProperty('name');
-   expect(provider).toHaveProperty('description');
-   expect(provider).toHaveProperty('get');
-   expect(typeof provider.get).toBe('function');
-   });
+        expect(provider).toHaveProperty('name');
+        expect(provider).toHaveProperty('description');
+        expect(provider).toHaveProperty('get');
+        expect(typeof provider.get).toBe('function');
+      });
 
-   documentTestResult('Provider initialization check', {
-   providersCount: plugin.providers.length,
-   allValid,
-   invalidProviders,
-   });
-   }
-   });*/
+      documentTestResult('Provider initialization check', {
+        providersCount: plugin.providers.length,
+        allValid,
+        invalidProviders,
+      });
+    }
+  });*/
 
    /*it('should register all providers', () => {
    const runtime = createRealRuntime();
@@ -192,7 +209,7 @@ describe('Provider Tests', () => {
         expect(providerNames.length).toBe(uniqueNames.size);
 
         documentTestResult('Provider uniqueness check', {
-          totalProviders: providerNames.length,
+          totalProviders: plugin.providers.length,
           uniqueProviders: uniqueNames.size,
           duplicates,
         });

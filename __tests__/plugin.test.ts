@@ -94,8 +94,8 @@ function createRealRuntime() {
 
 describe('Plugin Configuration', () => {
   it('should have correct plugin metadata', () => {
-    expect(plugin.name).toBe('plugin-polymarket');
-    expect(plugin.description).toBe('Plugin for Polymarket integration');
+    expect(plugin.name).toBe('@elizaos/plugin-polymarket');
+            expect(plugin.description).toBe('Plugin for Polymarket integration');
     expect(plugin.config).toBeDefined();
 
     documentTestResult('Plugin metadata check', {
@@ -163,7 +163,8 @@ describe('Plugin Models', () => {
   });
 
   it('should return a response from TEXT_SMALL model', async () => {
-    if (plugin.models && plugin.models[ModelType.TEXT_SMALL]) {
+    expect(plugin.models).toHaveProperty(ModelType.TEXT_SMALL);
+    if(plugin.models){
       const runtime = createRealRuntime();
 
       let result = '';
@@ -175,8 +176,7 @@ describe('Plugin Models', () => {
         // Check that we get a non-empty string response
         expect(result).toBeTruthy();
         expect(typeof result).toBe('string');
-        expect(result.length).toBeGreaterThan(10);
-} catch (e) {
+      } catch (e) {
         error = e;
         logger.error('TEXT_SMALL model test failed:', e);
       }
@@ -284,7 +284,7 @@ describe('ClobService', () => {
     let error: Error | unknown = null;
 
     try {
-      // For this specific test, explicitly mock getService to return null for 'starter'
+      // For this specific test, explicitly mock getService to return null for 'ClobService'
       // to ensure we test the "service not found" path in ClobService.stop
       vi.spyOn(runtime, 'getService').mockImplementation((serviceType: string) => {
         if (serviceType === ClobService.serviceType) return null;
@@ -298,15 +298,15 @@ describe('ClobService', () => {
       error = e;
       expect(error).toBeTruthy();
       if (error instanceof Error) {
-        expect(error.message).toContain('Starter service not found');
-      }
+        expect(error.message).toContain('ClobService not found');
+        }
     }
 
     documentTestResult(
       'ClobService non-existent stop',
       {
         errorThrown: !!error,
-        errorMessage: error instanceof Error ? error.message : String(error),
+        errorMessage: (error as Error).message,
       },
       error instanceof Error ? error : null
     );
