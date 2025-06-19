@@ -9,8 +9,8 @@ import {
 } from "../types";
 import { Service, IAgentRuntime, logger, Memory } from "@elizaos/core/v2";
 
-export class GammaService extends Service {
-  static serviceType = "GammaService";
+export class ClobService extends Service {
+  static serviceType = "ClobService";
   static apiUrl = "https://gamma-api.polymarket.com/";
   static DEFAULT_LIQUIDITY_MIN = "5000";
   static DEFAULT_VOLUME_MIN = "5000";
@@ -28,15 +28,15 @@ export class GammaService extends Service {
     super(runtime);
   }
 
-  static async start(runtime: IAgentRuntime): Promise<GammaService> {
-    const service = new GammaService(runtime);
-    console.log("GammaService starting...");
-    console.log("GammaService started successfully.");
+  static async start(runtime: IAgentRuntime): Promise<ClobService> {
+    const service = new ClobService(runtime);
+    console.log("ClobService starting...");
+    console.log("ClobService started successfully.");
     return service;
   }
 
   static async stop(runtime: IAgentRuntime): Promise<void> {
-    const service = runtime.getService(GammaService.serviceType);
+    const service = runtime.getService(ClobService.serviceType);
     if (!service) {
       throw new Error("Gamma service not found");
     }
@@ -101,7 +101,7 @@ export class GammaService extends Service {
 
       if (result.success) {
         const rawMarketData = result.data;
-        const market = GammaService._transformMarketData(rawMarketData);
+        const market = ClobService._transformMarketData(rawMarketData);
         return { success: true, market: market };
       }
       const errorMessage = `Invalid response format: ${result.error.message}`;
@@ -255,7 +255,7 @@ export class GammaService extends Service {
       if (result.success) {
         const resultData = result.data;
         const markets = resultData.map((market: PolymarketRawMarket) =>
-          GammaService._transformMarketData(market),
+          ClobService._transformMarketData(market),
         );
         return { success: true, markets };
       }
@@ -352,7 +352,7 @@ export class GammaService extends Service {
 
   async stop() {
     // No specific resources to release in this implementation
-    logger.info("GammaService stopped");
+    logger.info("ClobService stopped");
   }
 }
-export default GammaService;
+export default ClobService;
