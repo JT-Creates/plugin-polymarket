@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeAll, afterAll } from 'vitest';
-import plugin from '../src/plugin';
+import pluginPolymarket from '../src/plugin';
 import { type Action, type IAgentRuntime, type Memory, type State, type HandlerCallback, logger } from '@elizaos/core/v2';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
@@ -10,6 +10,7 @@ import {
   createMockMessage,
   createMockState,
 } from './utils/core-test-utils';
+import plugin from '../src/plugin';
 
 // Setup environment variables
 dotenv.config();
@@ -27,7 +28,7 @@ afterAll(() => {
 
 describe('Actions', () => {
   // Find the POLYMARKET_PLUGIN_STARTED_NOTIFICATION action from the plugin
-  const pluginStartedAction = plugin.actions?.find((action) => action.name === 'POLYMARKET_PLUGIN_STARTED_NOTIFICATION');
+  const pluginStartedAction = pluginPolymarket.actions?.find((action) => action.name === 'POLYMARKET_PLUGIN_STARTED_NOTIFICATION');
 
   // Run core tests on all plugin actions
   it('should pass core action tests', () => {

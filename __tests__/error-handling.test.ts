@@ -43,7 +43,7 @@ describe('Error Handling', () => {
       if (action && action.handler) {
         // Force the handler to throw an error
         const mockError = new Error('Test error in action');
-        vi.spyOn(console, 'error').mockImplementation(() => {});
+        //vi.spyOn(console, 'error').mockImplementation(() => {});
 
         // Create a custom mock runtime
         const mockRuntime = {
@@ -92,11 +92,11 @@ describe('Error Handling', () => {
     it('should throw an error when stopping non-existent service', async () => {
       const mockRuntime = createMockRuntimeWithGetService(null);
 
-      let caughtError = null;
+      let caughtError;
       try {
         await ClobService.stop(mockRuntime);
  expect(true).toBe(false); // Should not reach here
-      } catch (error: any) {
+      } catch (error) {
         caughtError = error as Error;
         expect(error.message).toBe('ClobService not found in runtime for stop');
       }

@@ -104,7 +104,7 @@ const runCoreModelTests = async (
 
 describe('Plugin Models', () => {
   it('should have models defined', () => {
-    expect(plugin.models).toBeDefined();
+    expect(plugin.models).toBeDefined(); // change to check if models are defined instead of truthy
     if (plugin.models) {
       expect(typeof plugin.models).toBe('object');
     }

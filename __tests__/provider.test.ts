@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeAll, afterAll } from 'vitest';
-import plugin from '../src/plugin';
+import pluginPolymarket from '../src/plugin';
 import type { IAgentRuntime, Memory, State, Provider } from '@elizaos/core/v2';
 import { logger } from '@elizaos/core/v2';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,6 +12,7 @@ import { readMarketsAction } from '../src/actions/utilites/readMarkets';
 import { getUsernameAction, setUserAction } from '../src/actions/utilites/user';
 import { connectWalletAction } from '../src/actions/wallet/connectWallet';
 import { getWalletInfoAction } from '../src/actions/wallet/getWalletInfo';
+import plugin from '../src/plugin';
 
 // Setup environment variables
 dotenv.config();
@@ -56,7 +57,12 @@ function createRealRuntime(): IAgentRuntime {
     character: {
       name: 'Test Character',
       system: 'You are a helpful assistant for testing.',
-      plugins: [],
+      plugins: [
+        "@elizaos/plugin-polymarket",    
+        ...(process.env.GOOGLE_GENERATIVE_AI_API_KEY
+          ? ["@elizaos/plugin-google-genai"]
+          : []),
+      ],
       settings: {},
     },
     getSetting: (key: string) => null,

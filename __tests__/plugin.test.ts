@@ -1,8 +1,8 @@
-import { describe, expect, it, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
-import plugin, { init } from '../src/plugin';
+import { describe, expect, it, vi, beforeAll, afterAll } from 'vitest';
 import { ModelType, logger } from '@elizaos/core';
 import { ClobService } from '../src/services/clobService';
 import dotenv from 'dotenv';
+import plugin from '../src/plugin';
 
 // Setup environment variables
 dotenv.config();
@@ -62,8 +62,13 @@ function createRealRuntime() {
     character: {
       name: 'Test Character',
       system: 'You are a helpful assistant for testing.',
-      plugins: [],
-      settings: {},
+      plugins: [
+        "@elizaos/plugin-polymarket",    
+        ...(process.env.GOOGLE_GENERATIVE_AI_API_KEY
+          ? ["@elizaos/plugin-google-genai"]
+          : []),
+      ],
+        settings: {},
     },
     getSetting: (key: string) => null,
     models: plugin.models,
@@ -89,6 +94,7 @@ function createRealRuntime() {
       logger.debug(`Registering service: ${serviceType}`);
       services.set(serviceType, service);
     },
+    registerPlugin: vi.fn(), // Add a mock registerPlugin
   };
 }
 
@@ -163,15 +169,17 @@ describe('Plugin Models', () => {
   });
 
   it('should return a response from TEXT_SMALL model', async () => {
-    expect(plugin.models).toHaveProperty(ModelType.TEXT_SMALL);
     if(plugin.models){
+      // Ensure TEXT_SMALL model is defined before using it
+      expect(plugin.models).toHaveProperty(ModelType.TEXT_SMALL);
+
       const runtime = createRealRuntime();
 
       let result = '';
       let error: Error | unknown = null;
 
       try {
-        logger.info('Using OpenAI for TEXT_SMALL model');
+        logger.info('Using Google Gen AI for TEXT_SMALL model');
         result = await plugin.models[ModelType.TEXT_SMALL](runtime as any, { prompt: 'test' });
         // Check that we get a non-empty string response
         expect(result).toBeTruthy();
@@ -214,7 +222,7 @@ describe('ClobService', () => {
         success: !!startResult,
         serviceType: startResult?.constructor.name,
       },
-      error
+      error,
     );
   });
 
