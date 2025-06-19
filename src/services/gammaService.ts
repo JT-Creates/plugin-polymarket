@@ -30,6 +30,8 @@ export class GammaService extends Service {
 
   static async start(runtime: IAgentRuntime): Promise<GammaService> {
     const service = new GammaService(runtime);
+    console.log("GammaService starting...");
+    console.log("GammaService started successfully.");
     return service;
   }
 
@@ -42,21 +44,28 @@ export class GammaService extends Service {
   }
 
   static async fetchMarkets(): Promise<PolymarketApiResponse> {
-    const params: Omit<PolymarketApiCallParams, "limit" | "offset"> = {
-      active: true,
-      closed: false,
-      archived: false,
-      liquidity_num_min: this.DEFAULT_LIQUIDITY_MIN,
-      volume_num_min: this.DEFAULT_VOLUME_MIN,
-      ascending: false,
-    };
-
-    const { markets, error } =
-      await GammaService.fetchAllMarketsPaginated(params);
-
-    if (error) return { success: false, error, markets: [] };
-
-    return { success: true, markets };
+    try {
+      const apiUrl = `${this.apiUrl}markets?active=true&closed=false&archived=false&liquidity_num_min=${this.DEFAULT_LIQUIDITY_MIN}&volume_num_min=${this.DEFAULT_VOLUME_MIN}&ascending=false`;
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch markets: ${response.statusText}`);
+      }
+      const data = await response.json();
+      const result = PolymarketApiDataSchema.safeParse(data);
+      if (!result.success) {
+        return {
+          success: false,
+          error: "Invalid response format",
+          markets: [],
+        };
+      }
+      const markets = result.data.map((rawMarket: PolymarketRawMarket) =>
+        this._transformMarketData(rawMarket),
+      );
+      return { success: true, markets };
+    } catch (error: any) {
+      return { success: false, error: error.message, markets: [] };
+    }
   }
 
   /**
@@ -294,6 +303,13 @@ export class GammaService extends Service {
         };
       }
 
+      if (totalFetchedInSession >= 10000) {
+        // Example limit. Adjust as needed
+        logger.warn(
+          "Safety break triggered: Fetched over 10000 markets in a single session. Potential runaway pagination.",
+        );
+      }
+
       if (pageResponse.markets.length > 0) {
         allMarkets.push(...pageResponse.markets);
         offset += pageResponse.markets.length;
@@ -328,6 +344,9 @@ export class GammaService extends Service {
     throw new Error("Method not implemented.");
   }
 
-  async stop() {}
+  async stop() {
+    // No specific resources to release in this implementation
+    logger.info("GammaService stopped");
+  }
 }
 export default GammaService;
