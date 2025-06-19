@@ -53,9 +53,11 @@ export class GammaService extends Service {
       const data = await response.json();
       const result = PolymarketApiDataSchema.safeParse(data);
       if (!result.success) {
+        const errorMessage = `Invalid response format: ${result.error.message}`;
+        logger.error(errorMessage);
         return {
           success: false,
-          error: "Invalid response format",
+          error: errorMessage,
           markets: [],
         };
       }
@@ -63,6 +65,7 @@ export class GammaService extends Service {
         this._transformMarketData(rawMarket),
       );
       return { success: true, markets };
+
     } catch (error: any) {
       return { success: false, error: error.message, markets: [] };
     }
@@ -84,7 +87,7 @@ export class GammaService extends Service {
       const response = await fetch(`${this.apiUrl}/${marketId.trim()}`);
 
       if (!response.ok) {
-        logger.info("response not ok", response);
+        logger.error(`API request failed for market ID "${marketId}" with status: ${response.status}`);
         if (response.status === 404)
           return {
             success: false,
@@ -101,12 +104,15 @@ export class GammaService extends Service {
         const market = GammaService._transformMarketData(rawMarketData);
         return { success: true, market: market };
       }
+      const errorMessage = `Invalid response format: ${result.error.message}`;
+      logger.error(errorMessage)
       return {
         success: false,
-        error: `Invalid response format: ${result.error.message}`,
+        error: errorMessage,
       };
+
     } catch (error) {
-      console.log(`Error fetching market by ID "${marketId}":`, error);
+      logger.error(`Error fetching market by ID "${marketId}":`, error);
       return {
         success: false,
         error:
