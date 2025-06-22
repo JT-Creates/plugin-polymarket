@@ -1,47 +1,114 @@
+import { Service, IAgentRuntime, logger } from "@elizaos/core/v2";
+import { ethers } from "ethers";
+import { ClobClient, AssetType } from "@polymarket/clob-client";
 import {
   PolymarketMarket,
   PolymarketApiResponse,
-  PolymarketRawMarket,
-  PolymarketRawMarketSchema,
-  PolymarketApiCallParams,
   PolymarketSingleMarketApiResponse,
-  PolymarketApiDataSchema,
 } from "../types";
-import { Service, IAgentRuntime, logger, Memory } from "@elizaos/core/v2";
 
 export class ClobService extends Service {
   static serviceType = "ClobService";
-  static apiUrl = "https://gamma-api.polymarket.com/";
-  static DEFAULT_LIQUIDITY_MIN = "5000";
-  static DEFAULT_VOLUME_MIN = "5000";
+  private clobClient: ClobClient;
+
+  constructor(runtime: IAgentRuntime) {
+    super(runtime);
+    // Initialize the ClobClient here, using environment variables
+    // Assuming IWallet is now called something else or needs a different import
+    logger.info(`Loading ClobService with PK: ${process.env.PK}`);
+  }
+
+  // Include ClobService functions here, prefixed with 'static' as needed or adjusted
+  // Example:
+
+  async connectWallet(privateKey: string): Promise<void> {
+    try {
+      if (!privateKey) {
+        throw new Error(
+          "Private key not provided in environment or function argument.",
+        );
+      }
+
+      const wallet = new ethers.Wallet(privateKey);
+      const chainId = parseInt(process.env.CHAIN_ID || "80001", 10); // Default to 80001
+      const host = process.env.CLOB_API_URL || "http://localhost:8080";
+      const clobClient = new ClobClient(host, chainId, wallet as any);
+
+      this.clobClient = clobClient;
+      logger.info(
+        `ClobService wallet connected successfully for address: ${await wallet.getAddress()}`,
+      );
+    } catch (error: any) {
+      logger.error(`Failed to connect wallet: ${error.message}`);
+      this.clobClient = null; // Ensure client is null if connection fails
+      throw new Error(`Wallet connection error: ${error.message}`);
+    }
+  }
+
+  static async start(runtime: IAgentRuntime): Promise<ClobService> {
+    const service = new ClobService(runtime);
+    return service;
+  }
 
   static register(runtime: IAgentRuntime): IAgentRuntime {
     return runtime;
   }
 
-  // Required: Describe what this service enables the agent to do
   capabilityDescription =
-    "Enables the agent to interact with Polymarket's Gamma API";
+    "Provides access to the Polymarket CLOB client for trading operations.";
 
-  // Store runtime for service operations
-  constructor(protected runtime: IAgentRuntime) {
-    super(runtime);
+  getClobClient(): ClobClient {
+    if (!this.clobClient) {
+      throw new Error(
+        "ClobClient not initialized. Ensure the wallet is connected. Call connectWallet() if needed.",
+      );
+    }
+    return this.clobClient;
   }
 
-  static async start(runtime: IAgentRuntime): Promise<ClobService> {
-    const service = new ClobService(runtime);
-    console.log("ClobService starting...");
-    console.log("ClobService started successfully.");
-    return service;
-  }
+  async updateBalanceAllowance(
+    assetType: AssetType,
+    tokenId?: string,
+  ): Promise<void> {
+    try {
+      if (!this.clobClient) {
+        throw new Error(
+          "ClobClient not initialized. Ensure the wallet is connected.",
+        );
+      }
+      const params = { asset_type: assetType };
+      if (tokenId) {
+        params["token_id"] = tokenId;
+      }
 
+      // The updateBalanceAllowance function can only take the above object, or a single string for token ID
+      if (tokenId) {
+        // Conditional token
+        await this.clobClient.updateBalanceAllowance(params);
+      } else {
+        // Collateral token
+        await this.clobClient.updateBalanceAllowance(params);
+      }
+
+      logger.info(
+        `Successfully updated balance allowance for asset type: ${assetType}, token ID: ${tokenId || "N/A"}`,
+      );
+    } catch (error: any) {
+      logger.error(`Failed to update balance allowance: ${error.message}`);
+      throw new Error(`Failed to update balance allowance: ${error.message}`);
+    }
+  }
+  async stop() {
+    logger.info("ClobService stopped");
+  }
   static async stop(runtime: IAgentRuntime): Promise<void> {
     const service = runtime.getService(ClobService.serviceType);
-    if (!service) {
-      throw new Error("Gamma service not found");
-    }
-    service.stop();
+    if (!service) throw new Error("ClobService not found in runtime for stop");
+    await service.stop();
   }
+  static apiUrl = "https://gamma-api.polymarket.com/";
+  static DEFAULT_LIQUIDITY_MIN = "5000";
+  static DEFAULT_VOLUME_MIN = "5000";
 
   static async fetchMarkets(): Promise<PolymarketApiResponse> {
     try {
@@ -50,19 +117,10 @@ export class ClobService extends Service {
       if (!response.ok) {
         throw new Error(`Failed to fetch markets: ${response.statusText}`);
       }
-      const data = await response.json();
-      const result = PolymarketApiDataSchema.safeParse(data);
-      if (!result.success) {
-        const errorMessage = `Invalid response format: ${result.error.message}`;
-        logger.error(errorMessage);
-        return {
-          success: false,
-          error: errorMessage,
-          markets: [],
-        };
-      }
-      const markets = result.data.map((rawMarket: PolymarketRawMarket) =>
-        this._transformMarketData(rawMarket),
+      const data = (await response.json()) as any[];
+      // Assuming the API returns an array of raw market objects
+      const markets: PolymarketMarket[] = data.map((rawMarket: any) =>
+        ClobService._transformMarketData(rawMarket),
       );
       return { success: true, markets };
     } catch (error: any) {
@@ -86,9 +144,7 @@ export class ClobService extends Service {
       const response = await fetch(`${this.apiUrl}/${marketId.trim()}`);
 
       if (!response.ok) {
-        logger.error(
-          `API request failed for market ID "${marketId}" with status: ${response.status}`,
-        );
+        logger.info("response not ok", response);
         if (response.status === 404)
           return {
             success: false,
@@ -97,22 +153,10 @@ export class ClobService extends Service {
         throw new Error(`API request failed with status ${response.status}`);
       }
 
-      const rawMarketData = await response.json();
-      const result = PolymarketRawMarketSchema.safeParse(rawMarketData);
-
-      if (result.success) {
-        const rawMarketData = result.data;
-        const market = ClobService._transformMarketData(rawMarketData);
-        return { success: true, market: market };
-      }
-      const errorMessage = `Invalid response format: ${result.error.message}`;
-      logger.error(errorMessage);
-      return {
-        success: false,
-        error: errorMessage,
-      };
+      const marketData = await response.json();
+      return { success: true, market: marketData };
     } catch (error) {
-      logger.error(`Error fetching market by ID "${marketId}":`, error);
+      console.log(`Error fetching market by ID "${marketId}":`, error);
       return {
         success: false,
         error:
@@ -126,7 +170,7 @@ export class ClobService extends Service {
    * @param params - Parameters for the API call
    * @returns Constructed API URL
    */
-  private static _buildApiUrl(params: PolymarketApiCallParams): string {
+  private static _buildApiUrl(params: any): string {
     const query = new URLSearchParams();
 
     query.append("limit", params.limit?.toString() ?? "100");
@@ -151,85 +195,50 @@ export class ClobService extends Service {
   }
 
   /**
+   * Transforms raw market data from the Polymarket API into a `PolymarketMarket` object.
+   * @param rawMarket The raw market data object from the API.
+   * @returns A `PolymarketMarket` object representing the transformed market data.
+   */
+  /**
    * Transforms raw market data into the PolymarketMarket structure
    * @param rawMarket - Raw market data from API
    * @returns Transformed market data
    */
-  private static _transformMarketData(
-    rawMarket: PolymarketRawMarket,
-  ): PolymarketMarket {
-    let processedOutcomes: {
-      name: string;
-      price: string;
-      clobTokenId: string;
-    }[] = [];
-
-    try {
-      const outcomeNames =
-        typeof rawMarket.outcomes === "string"
-          ? JSON.parse(rawMarket.outcomes)
-          : rawMarket.outcomes;
-      const outcomePricesStr =
-        typeof rawMarket.outcomePrices === "string"
-          ? JSON.parse(rawMarket.outcomePrices)
-          : rawMarket.outcomePrices;
-      const clobTokenIds =
-        typeof rawMarket.clobTokenIds === "string"
-          ? JSON.parse(rawMarket.clobTokenIds)
-          : rawMarket.clobTokenIds;
-
-      if (
-        Array.isArray(outcomeNames) &&
-        Array.isArray(outcomePricesStr) &&
-        Array.isArray(clobTokenIds) &&
-        outcomeNames.length === outcomePricesStr.length &&
-        outcomeNames.length === clobTokenIds.length
-      ) {
-        processedOutcomes = outcomeNames.map((name: string, index: number) => ({
-          clobTokenId: clobTokenIds[index],
-          name: name,
-          price: outcomePricesStr[index] || "0",
-        }));
-      } else if (rawMarket.outcomes || rawMarket.outcomePrices) {
-        console.log(
-          `rawMarket ID ${rawMarket.id}: Mismatch or invalid format in outcomes/outcomePrices. Received outcomes: ${rawMarket.outcomes}, Received prices: ${rawMarket.outcomePrices}`,
-        );
-      }
-    } catch (e) {
-      console.log(
-        `rawMarket ID ${rawMarket.id}: Error parsing outcomes/prices JSON strings. Received outcomes: ${rawMarket.outcomes}, Received prices: ${rawMarket.outcomePrices}`,
-        e,
-      );
+  private static _transformMarketData(rawMarket: any): PolymarketMarket {
+    // Example transformation, adjust according to actual API response structure
+    // and the fields defined in PolymarketMarket type
+    if (!rawMarket) {
+      // Handle cases where rawMarket might be undefined or null.
+      return {
+        id: "unknown",
+        slug: "unknown",
+        question: "No question",
+        outcomes: [],
+        description: "",
+        active: false,
+        volume: "0",
+        liquidity: "0",
+        // Add other necessary fields with default values or appropriate handling.
+        // For instance, if `outcomes` is expected to be an array of a specific structure:
+        // outcomes: [], // Initialize to an empty array of the expected type
+        // You would adjust this based on the actual structure of `PolymarketMarket` and the API.
+        // url: 'unknown',  // If url is a required field, provide a default or handle appropriately
+        // ... other required fields with defaults or proper handling
+      };
     }
 
+    // TODO: Implement the transformation logic here.
+    //       For now, it returns a placeholder.
     return {
-      id: rawMarket.id,
-      slug: rawMarket.slug,
-      question: rawMarket.question,
+      id: rawMarket.id || "unknown",
+      slug: rawMarket.slug || "unknown",
+      question: rawMarket.question || "No question",
+      outcomes: rawMarket.outcomes || [],
       description: rawMarket.description || "",
-      active: rawMarket.active,
-      closed: rawMarket.closed,
-      acceptingOrders: rawMarket.acceptingOrders,
-      new: rawMarket.new,
+      // Ensure 'active' is always a boolean
+      active: rawMarket.active || false,
       volume: rawMarket.volume || "0",
       liquidity: rawMarket.liquidity || "0",
-      url: `https://polymarket.com/market/${rawMarket.slug}`,
-      startDate: rawMarket.startDate,
-      endDate: rawMarket.endDate,
-      orderMinSize: rawMarket.orderMinSize,
-      orderPriceMinTickSize: rawMarket.orderPriceMinTickSize,
-      volume24hr: rawMarket.volume24hr,
-      volume1wk: rawMarket.volume1wk,
-      volume1mo: rawMarket.volume1mo,
-      volume1yr: rawMarket.volume1yr,
-      oneDayPriceChange: rawMarket.oneDayPriceChange,
-      oneHourPriceChange: rawMarket.oneHourPriceChange,
-      oneWeekPriceChange: rawMarket.oneWeekPriceChange,
-      oneMonthPriceChange: rawMarket.oneMonthPriceChange,
-      lastTradePrice: rawMarket.lastTradePrice,
-      bestBid: rawMarket.bestBid,
-      bestAsk: rawMarket.bestAsk,
-      outcomes: processedOutcomes,
     };
   }
 
@@ -239,7 +248,7 @@ export class ClobService extends Service {
    * @returns Promise resolving to market data
    */
   private static async fetchMarketPage(
-    apiParams: PolymarketApiCallParams,
+    apiParams: any,
   ): Promise<PolymarketApiResponse> {
     try {
       const url = this._buildApiUrl(apiParams);
@@ -249,21 +258,9 @@ export class ClobService extends Service {
         throw new Error(`API request failed with status ${response.status}`);
       }
 
-      const data = await response.json();
-      const result = PolymarketApiDataSchema.safeParse(data);
-
-      if (result.success) {
-        const resultData = result.data;
-        const markets = resultData.map((market: PolymarketRawMarket) =>
-          ClobService._transformMarketData(market),
-        );
-        return { success: true, markets };
-      }
-      return {
-        success: false,
-        error: "Invalid response format",
-        markets: [],
-      };
+      const data = (await response.json()) as PolymarketMarket[];
+      // No schema parsing yet, assuming PolymarketApiResponse format for raw data
+      return { success: true, markets: data };
     } catch (error) {
       console.log("Error in fetchMarketPage:", error);
       return {
@@ -283,7 +280,7 @@ export class ClobService extends Service {
    * @returns Promise resolving to full set of market data
    */
   private static async fetchAllMarketsPaginated(
-    baseParams: Omit<PolymarketApiCallParams, "limit" | "offset">,
+    baseParams: Omit<any, "limit" | "offset">,
   ): Promise<PolymarketApiResponse> {
     const allMarkets: PolymarketMarket[] = [];
     let offset = 0;
@@ -292,7 +289,7 @@ export class ClobService extends Service {
     let totalFetchedInSession = 0; // Safety break for runaway pagination
 
     while (hasMore) {
-      const pageParams: PolymarketApiCallParams = {
+      const pageParams: any = {
         ...baseParams,
         limit,
         offset,
@@ -349,10 +346,4 @@ export class ClobService extends Service {
   async redeemShares(marketId: string): Promise<any> {
     throw new Error("Method not implemented.");
   }
-
-  async stop() {
-    // No specific resources to release in this implementation
-    logger.info("ClobService stopped");
-  }
 }
-export default ClobService;
