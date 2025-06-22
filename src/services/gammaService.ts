@@ -65,7 +65,6 @@ export class ClobService extends Service {
         this._transformMarketData(rawMarket),
       );
       return { success: true, markets };
-
     } catch (error: any) {
       return { success: false, error: error.message, markets: [] };
     }
@@ -87,7 +86,9 @@ export class ClobService extends Service {
       const response = await fetch(`${this.apiUrl}/${marketId.trim()}`);
 
       if (!response.ok) {
-        logger.error(`API request failed for market ID "${marketId}" with status: ${response.status}`);
+        logger.error(
+          `API request failed for market ID "${marketId}" with status: ${response.status}`,
+        );
         if (response.status === 404)
           return {
             success: false,
@@ -105,12 +106,11 @@ export class ClobService extends Service {
         return { success: true, market: market };
       }
       const errorMessage = `Invalid response format: ${result.error.message}`;
-      logger.error(errorMessage)
+      logger.error(errorMessage);
       return {
         success: false,
         error: errorMessage,
       };
-
     } catch (error) {
       logger.error(`Error fetching market by ID "${marketId}":`, error);
       return {
