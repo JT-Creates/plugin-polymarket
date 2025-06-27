@@ -9,10 +9,11 @@ import type {
 } from "@elizaos/core/v2";
 import { v4 as uuidv4 } from "uuid";
 import { character } from "./character";
+import { setUserAction } from "./actions/utilities/user";
 
-export class ClobTestSuite implements TestSuite {
-  name = "clob";
-  description = "Tests for the clob project";
+export class PolyMarketTestSuite implements TestSuite {
+  name = "PolyMarket";
+  description = "Tests for the PolyMarket project";
 
   tests = [
     {
@@ -61,12 +62,12 @@ export class ClobTestSuite implements TestSuite {
         // Test plugin initialization with empty config
         try {
           await runtime.registerPlugin({
-            name: "clob",
-            description: "A clob plugin for Eliza",
+            name: "PolyMarket",
+            description: "A PolyMarket plugin for Eliza",
             init: async () => {},
             config: {},
           });
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(`Failed to register plugin: ${error.message}`);
         }
       },
@@ -115,7 +116,7 @@ export class ClobTestSuite implements TestSuite {
           }
 
           // expect(runtime.processActions).toHaveBeenCalledTimes(1); // Verify it was called
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(
             `Polymarket plugin started action test failed: ${error.message}`,
           );
@@ -127,20 +128,20 @@ export class ClobTestSuite implements TestSuite {
       fn: async (runtime: IAgentRuntime) => {
         // Test service registration and lifecycle
         try {
-          const service = runtime.getService("clob");
+          const service = runtime.getService("ClobService");
           if (!service) {
             throw new Error("ClobService not found");
           }
 
           if (
             service.capabilityDescription !==
-            "This is a clob service which is attached to the agent through the clob plugin."
+            "This is a ClobService which is attached to the agent through the PolyMarket plugin."
           ) {
             throw new Error("Incorrect service capability description");
           }
 
           await service.stop();
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(`ClobService test failed: ${error.message}`);
         }
       },
@@ -155,7 +156,7 @@ export class ClobTestSuite implements TestSuite {
           content: {
             text: `Set my username to ${testUsername}`,
             source: "test",
-            actions: [],
+            actions: ["setUserAction"],
           },
         };
 
@@ -194,7 +195,7 @@ export class ClobTestSuite implements TestSuite {
             content: {
               text: "What is my username?",
               source: "test",
-              actions: [],
+              actions: ["getUsernameAction"],
             },
           };
 
@@ -218,7 +219,7 @@ export class ClobTestSuite implements TestSuite {
               `Get username action failed after setting. Expected response: "${expectedResponse}"`,
             );
           }
-        } catch (error) {
+        } catch (error: any) {
           throw new Error(`Set username action test failed: ${error.message}`);
         }
       },
@@ -230,7 +231,7 @@ export class ClobTestSuite implements TestSuite {
 }
 
 // Export a default instance
-export default new ClobTestSuite();
+export default new PolyMarketTestSuite();
 function expect(
   processActions: (
     message: Memory,
